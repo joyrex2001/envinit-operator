@@ -14,5 +14,5 @@ spec:
       serviceAccountName: envinit-operator-sa
       containers:
       - name: envinit-operator
-        image: docker.io/joyrex2001/envinit:latest
+        image: docker.io/joyrex2001/envinit-operator:latest
         imagePullPolicy: Always

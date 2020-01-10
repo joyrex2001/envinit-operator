@@ -3,4 +3,4 @@ kind: Namespace
 metadata:
   name: example-environment
   annotations:
-    "envinit.joyrex2001.com/type": "dev"
+    "envinit.joyrex2001.com/type": "example"

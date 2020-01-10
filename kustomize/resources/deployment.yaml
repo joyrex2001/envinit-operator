@@ -1,0 +1,18 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: envinit-operator
+spec:
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: envinit-operator
+    spec:
+      serviceAccountName: envinit-operator-sa
+      containers:
+      - name: envinit-operator
+        image: docker.io/joyrex2001/envinit:latest
+        imagePullPolicy: Always

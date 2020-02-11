@@ -31,7 +31,7 @@ if [[ $1 == "--config" ]] ; then
       {
         "apiVersion": "v1",
         "kind": "Namespace",
-        "watchEvent": ["Added"]
+        "watchEvent": ["Added","Modified"]
       }
     ]
   }
@@ -43,17 +43,33 @@ fi
 ## to the bat-mobile, let's go... ##
 ####################################
 
-type=$(jq -r '.[0].object.metadata.annotations["envinit.joyrex2001.com/type"]' $BINDING_CONTEXT_PATH)
-type=$(sanitize ${type})
+list=""
+[ "$(cat $BINDING_CONTEXT_PATH |jq '.[].objects')" == "null" ] || list=".objects[]"
 
-name=$(jq -r '.[0].object.metadata.name' $BINDING_CONTEXT_PATH)
-name=$(sanitize ${name})
+query=$(cat << _JQ_QUERY
+        .[]${list} as \$item | \
+        "\(\$item.object.metadata.name),\
+        \(\$item.object.metadata.annotations["envinit.joyrex2001.com/type"]),\
+        \(\$item.object.metadata.annotations["envinit.joyrex2001.com/applied"])"
+_JQ_QUERY
+)
 
-if  [[ ! "${type}" = "" ]]     && \
-    [[ ! "${type}" = "null" ]] && \
-    [ -f ${runfolder}/environment/${type}/run.sh ]
-then
-      log "provisioning namespace '${name}' as a '${type}' environment..." && \
-      cd ${runfolder}/environment/${type} || catch_error
-      ./run.sh "${name}" || catch_error
-fi
+cat $BINDING_CONTEXT_PATH | jq -r "${query}" |
+while IFS=$',' read -r name type applied; do
+    type=$(sanitize ${type})
+    name=$(sanitize ${name})
+    applied=$(sanitize ${applied})
+
+    if  [[ ! "${type}" = "" ]]     && \
+        [[ ! "${type}" = "null" ]] && \
+        [[ "${applied}" = "null" ]]  && \
+        [ -f ${runfolder}/environment/${type}/run.sh ]
+    then
+          log "provisioning namespace '${name}' as a '${type}' environment..." && \
+          cd ${runfolder}/environment/${type} || catch_error
+          ./run.sh "${name}" || catch_error
+          kubectl annotate namespace ${name} envinit.joyrex2001.com/applied=$(date +%s) --overwrite=true
+     else
+        log "skip provisioning namespace '${name}'..."
+    fi
+done

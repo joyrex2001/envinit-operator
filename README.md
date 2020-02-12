@@ -24,3 +24,4 @@ metadata:
 ## See also
 
 * https://github.com/flant/shell-operator
+* https://www.hcs-company.com/blog/operator-automatiseren-namespace-openshift

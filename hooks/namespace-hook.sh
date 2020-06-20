@@ -44,7 +44,7 @@ fi
 ####################################
 
 list=""
-[ "$(cat $BINDING_CONTEXT_PATH |jq '.[].objects')" == "null" ] || list=".objects[]"
+[ "$(cat $BINDING_CONTEXT_PATH | jq '.[].objects' | head -n 1)" == "null" ] || list=".objects[]"
 
 query=$(cat << _JQ_QUERY
         .[]${list} as \$item | \
@@ -65,10 +65,10 @@ while IFS=$',' read -r name type applied; do
         [[ "${applied}" = "null" ]]  && \
         [ -f ${runfolder}/environment/${type}/run.sh ]
     then
-          log "provisioning namespace '${name}' as a '${type}' environment..." && \
-          cd ${runfolder}/environment/${type} || catch_error
-          ./run.sh "${name}" || catch_error
-          kubectl annotate namespace ${name} envinit.joyrex2001.com/applied=$(date +%s) --overwrite=true
+        log "provisioning namespace '${name}' as a '${type}' environment..." && \
+        cd ${runfolder}/environment/${type} || catch_error
+        ./run.sh "${name}" || catch_error
+        kubectl annotate namespace ${name} envinit.joyrex2001.com/applied=$(date +%s) --overwrite=true
      else
         log "skip provisioning namespace '${name}'..."
     fi
